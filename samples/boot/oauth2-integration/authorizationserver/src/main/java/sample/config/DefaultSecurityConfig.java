@@ -38,7 +38,7 @@ public class DefaultSecurityConfig {
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.authorizeRequests(authorizeRequests ->
-				authorizeRequests.anyRequest().authenticated()
+				authorizeRequests.anyRequest().authenticated()// 全部需要权限访问
 			)
 			.formLogin(withDefaults());
 		return http.build();

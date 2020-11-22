@@ -91,6 +91,7 @@ public class JwkSetEndpointFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		// TODO 每次都要重新 build， 可以优化
 		JWKSet jwkSet = buildJwkSet();
 
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);

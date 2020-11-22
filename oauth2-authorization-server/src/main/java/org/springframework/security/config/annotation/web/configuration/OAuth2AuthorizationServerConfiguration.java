@@ -45,16 +45,16 @@ public class OAuth2AuthorizationServerConfiguration {
 	// @formatter:off
 	public static void applyDefaultSecurity(HttpSecurity http) throws Exception {
 		OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-				new OAuth2AuthorizationServerConfigurer<>();
+				new OAuth2AuthorizationServerConfigurer<>(); // 为了加载该 config
 		RequestMatcher[] endpointMatchers = authorizationServerConfigurer
-				.getEndpointMatchers().toArray(new RequestMatcher[0]);
+				.getEndpointMatchers().toArray(new RequestMatcher[0]); // 获取这几个 endpoint url request matcher
 
 		http
-			.requestMatcher(new OrRequestMatcher(endpointMatchers))
+			.requestMatcher(new OrRequestMatcher(endpointMatchers)) // 添加拦截器
 			.authorizeRequests(authorizeRequests ->
-				authorizeRequests.anyRequest().authenticated()
+				authorizeRequests.anyRequest().authenticated() // 都需要鉴权，应等同于 .authorizeRequests().anyRequest().authenticated()
 			)
-			.csrf(csrf -> csrf.ignoringRequestMatchers(endpointMatchers))
+			.csrf(csrf -> csrf.ignoringRequestMatchers(endpointMatchers)) // 不进行csrf拦截
 			.apply(authorizationServerConfigurer);
 	}
 	// @formatter:on

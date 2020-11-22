@@ -31,7 +31,7 @@ public interface RegisteredClientRepository {
 	 * @param id the registration identifier
 	 * @return the {@link RegisteredClient} if found, otherwise {@code null}
 	 */
-	RegisteredClient findById(String id);
+	RegisteredClient findById(String id); // 这个的含义有点问题。。。 理论上 id 应该 = clientId
 
 	/**
 	 * Returns the registered client identified by the provided {@code clientId}, or {@code null} if not found.

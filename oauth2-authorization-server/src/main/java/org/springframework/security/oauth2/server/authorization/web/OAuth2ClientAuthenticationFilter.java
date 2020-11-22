@@ -76,9 +76,9 @@ public class OAuth2ClientAuthenticationFilter extends OncePerRequestFilter {
 		this.requestMatcher = requestMatcher;
 		this.authenticationConverter = new DelegatingAuthenticationConverter(
 				Arrays.asList(
-						new ClientSecretBasicAuthenticationConverter(),
-						new ClientSecretPostAuthenticationConverter(),
-						new PublicClientAuthenticationConverter()));
+						new ClientSecretBasicAuthenticationConverter(), // client basic 授权
+						new ClientSecretPostAuthenticationConverter(), // client post urlpattern 请求中获取
+						new PublicClientAuthenticationConverter())); // PKCE 授权码登录
 		this.authenticationSuccessHandler = this::onAuthenticationSuccess;
 		this.authenticationFailureHandler = this::onAuthenticationFailure;
 	}
@@ -89,6 +89,7 @@ public class OAuth2ClientAuthenticationFilter extends OncePerRequestFilter {
 
 		if (this.requestMatcher.matches(request)) {
 			try {
+				// 从 request 中获取授权 并注册 到 spring security
 				Authentication authenticationRequest = this.authenticationConverter.convert(request);
 				if (authenticationRequest != null) {
 					Authentication authenticationResult = this.authenticationManager.authenticate(authenticationRequest);

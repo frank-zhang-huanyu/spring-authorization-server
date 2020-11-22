@@ -50,6 +50,14 @@ final class OAuth2EndpointUtils {
 		return parameters;
 	}
 
+	/**
+	 * 1. grantType 为 authorization_code
+	 * 2. code 不为空
+	 * 3. code_verifier 不为空 参照 https://tonyxu.io/zh/posts/2018/oauth2-pkce-flow/
+	 *
+	 * @param request
+	 * @return
+	 */
 	static boolean matchesPkceTokenRequest(HttpServletRequest request) {
 		return AuthorizationGrantType.AUTHORIZATION_CODE.getValue().equals(
 				request.getParameter(OAuth2ParameterNames.GRANT_TYPE)) &&

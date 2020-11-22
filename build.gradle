@@ -5,6 +5,8 @@ buildscript {
 		classpath 'io.spring.nohttp:nohttp-gradle:0.0.5.RELEASE'
 	}
 	repositories {
+		mavenLocal()
+		maven { url 'https://maven.aliyun.com/repository/spring/'}
 		maven {
 			url = 'https://repo.spring.io/plugins-snapshot'
 			if (project.hasProperty('artifactoryUsername')) {
@@ -28,6 +30,8 @@ description = 'Spring Authorization Server'
 ext.snapshotBuild = version.contains("SNAPSHOT")
 
 repositories {
+	maven { url 'https://maven.aliyun.com/repository/public/' }
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -39,6 +43,12 @@ subprojects {
 	}
 	tasks.withType(JavaCompile) {
 		options.encoding = "UTF-8"
+	}
+
+	repositories {
+		maven { url 'https://maven.aliyun.com/repository/public/' }
+		mavenLocal()
+		mavenCentral()
 	}
 }
 

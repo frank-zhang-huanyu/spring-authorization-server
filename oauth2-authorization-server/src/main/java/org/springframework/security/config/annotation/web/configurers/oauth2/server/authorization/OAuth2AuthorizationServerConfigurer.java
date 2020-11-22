@@ -61,17 +61,18 @@ import java.util.Map;
  * An {@link AbstractHttpConfigurer} for OAuth 2.0 Authorization Server support.
  *
  * @author Joe Grandja
- * @since 0.0.1
  * @see AbstractHttpConfigurer
  * @see RegisteredClientRepository
  * @see OAuth2AuthorizationService
  * @see OAuth2AuthorizationEndpointFilter
  * @see OAuth2TokenEndpointFilter
  * @see OAuth2ClientAuthenticationFilter
+ * @since 0.0.1
  */
 public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBuilder<B>>
 		extends AbstractHttpConfigurer<OAuth2AuthorizationServerConfigurer<B>, B> {
 
+	// POST&GET /oauth2/authorize 授权
 	private final RequestMatcher authorizationEndpointMatcher = new OrRequestMatcher(
 			new AntPathRequestMatcher(
 					OAuth2AuthorizationEndpointFilter.DEFAULT_AUTHORIZATION_ENDPOINT_URI,
@@ -79,15 +80,18 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 			new AntPathRequestMatcher(
 					OAuth2AuthorizationEndpointFilter.DEFAULT_AUTHORIZATION_ENDPOINT_URI,
 					HttpMethod.POST.name()));
+	// POST /oauth2/token 获取 token
 	private final RequestMatcher tokenEndpointMatcher = new AntPathRequestMatcher(
 			OAuth2TokenEndpointFilter.DEFAULT_TOKEN_ENDPOINT_URI, HttpMethod.POST.name());
+	// POST /oauth2/revoke 撤消授权
 	private final RequestMatcher tokenRevocationEndpointMatcher = new AntPathRequestMatcher(
 			OAuth2TokenRevocationEndpointFilter.DEFAULT_TOKEN_REVOCATION_ENDPOINT_URI, HttpMethod.POST.name());
+	// POST /oauth2/jwks JSON Web Key Sets 	表示一组JWK的JSON对象。JSON对象必须具有一个keys成员，该成员是JWK的数组。
 	private final RequestMatcher jwkSetEndpointMatcher = new AntPathRequestMatcher(
 			JwkSetEndpointFilter.DEFAULT_JWK_SET_ENDPOINT_URI, HttpMethod.GET.name());
 
 	/**
-	 * Sets the repository of registered clients.
+	 * Sets the repository of registered clients. 客户端仓库
 	 *
 	 * @param registeredClientRepository the repository of registered clients
 	 * @return the {@link OAuth2AuthorizationServerConfigurer} for further configuration
@@ -99,7 +103,7 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 	}
 
 	/**
-	 * Sets the authorization service.
+	 * Sets the authorization service. 授权(Token)管理器
 	 *
 	 * @param authorizationService the authorization service
 	 * @return the {@link OAuth2AuthorizationServerConfigurer} for further configuration
@@ -111,7 +115,7 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 	}
 
 	/**
-	 * Sets the source for cryptographic keys.
+	 * Sets the source for cryptographic keys. 密钥管理器，用于 JWKS
 	 *
 	 * @param keySource the source for cryptographic keys
 	 * @return the {@link OAuth2AuthorizationServerConfigurer} for further configuration
@@ -132,16 +136,33 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 				this.tokenRevocationEndpointMatcher, this.jwkSetEndpointMatcher);
 	}
 
+	/**
+	 * 加载顺序
+	 * beforeInit();
+	 * init();
+	 * this.buildState = BuildState.CONFIGURING;
+	 * beforeConfigure();
+	 * configure();
+	 * this.buildState = BuildState.BUILDING;
+	 * performBuild();
+	 *
+	 * @see org.springframework.security.config.annotation.AbstractConfiguredSecurityBuilder
+	 * doBuild()
+	 */
 	@Override
 	public void init(B builder) {
+		// postProcess: Initialize the object possibly returning a modified instance that should be used instead. 用来确保加载的永远是最新的类
+		// OAUTH2.0 客户端权限管理器
 		OAuth2ClientAuthenticationProvider clientAuthenticationProvider =
 				new OAuth2ClientAuthenticationProvider(
 						getRegisteredClientRepository(builder),
 						getAuthorizationService(builder));
 		builder.authenticationProvider(postProcess(clientAuthenticationProvider));
 
+		// 需要验证 access_token 的 都需要支持 jwt
 		NimbusJwsEncoder jwtEncoder = new NimbusJwsEncoder(getKeySource(builder));
 
+		// OAUTH2.0 之 授权码 模式
 		OAuth2AuthorizationCodeAuthenticationProvider authorizationCodeAuthenticationProvider =
 				new OAuth2AuthorizationCodeAuthenticationProvider(
 						getRegisteredClientRepository(builder),
@@ -149,18 +170,21 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 						jwtEncoder);
 		builder.authenticationProvider(postProcess(authorizationCodeAuthenticationProvider));
 
+		// OAUTH2.0 之 Refresh 模式
 		OAuth2RefreshTokenAuthenticationProvider refreshTokenAuthenticationProvider =
 				new OAuth2RefreshTokenAuthenticationProvider(
 						getAuthorizationService(builder),
 						jwtEncoder);
 		builder.authenticationProvider(postProcess(refreshTokenAuthenticationProvider));
 
+		// OAUTH2.0 之 客户端认证 模式
 		OAuth2ClientCredentialsAuthenticationProvider clientCredentialsAuthenticationProvider =
 				new OAuth2ClientCredentialsAuthenticationProvider(
 						getAuthorizationService(builder),
 						jwtEncoder);
 		builder.authenticationProvider(postProcess(clientCredentialsAuthenticationProvider));
 
+		// 撤销 Token
 		OAuth2TokenRevocationAuthenticationProvider tokenRevocationAuthenticationProvider =
 				new OAuth2TokenRevocationAuthenticationProvider(
 						getAuthorizationService(builder));
@@ -178,25 +202,37 @@ public final class OAuth2AuthorizationServerConfigurer<B extends HttpSecurityBui
 			// TODO This needs to change as the login page could be customized with a different URL
 			authenticationEntryPoint.setDefaultEntryPoint(
 					new LoginUrlAuthenticationEntryPoint(
-							DefaultLoginPageGeneratingFilter.DEFAULT_LOGIN_PAGE_URL));
+							DefaultLoginPageGeneratingFilter.DEFAULT_LOGIN_PAGE_URL)); // 默认走登录
 
+			// 如果产生异常，并且URL在 tokenEndpointMatcher/tokenRevocationEndpointMatcher 时, 则返回未授权(403)异常， 这2个URL只支持 client 的授权
+			// 其它异常跳转到登陆界面
 			exceptionHandling.authenticationEntryPoint(authenticationEntryPoint);
 		}
 	}
 
 	@Override
 	public void configure(B builder) {
+		// filter chain 顺序
+		// JwkSetEndpointFilter jwkSet 访问 url
+		// -> OAuth2ClientAuthenticationFilter
+		// -> OAuth2AuthorizationEndpointFilter
+		// -> AbstractPreAuthenticatedProcessingFilter
+
+		// Get /oauth2/jwks  返回 Jwks json
 		JwkSetEndpointFilter jwkSetEndpointFilter = new JwkSetEndpointFilter(getKeySource(builder));
 		builder.addFilterBefore(postProcess(jwkSetEndpointFilter), AbstractPreAuthenticatedProcessingFilter.class);
 
 		AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
 
+		// POST /oauth2/token 获取 token 使用 授权码 PKCE Flow @see https://developer.okta.com/blog/2019/08/22/okta-authjs-pkce
+		// POST /oauth2/revoke 撤消授权  进行客户端权限验证
 		OAuth2ClientAuthenticationFilter clientAuthenticationFilter =
 				new OAuth2ClientAuthenticationFilter(
 						authenticationManager,
 						new OrRequestMatcher(this.tokenEndpointMatcher, this.tokenRevocationEndpointMatcher));
 		builder.addFilterAfter(postProcess(clientAuthenticationFilter), AbstractPreAuthenticatedProcessingFilter.class);
 
+		// /oauth2/authorize
 		OAuth2AuthorizationEndpointFilter authorizationEndpointFilter =
 				new OAuth2AuthorizationEndpointFilter(
 						getRegisteredClientRepository(builder),

@@ -40,13 +40,13 @@ import java.util.function.Consumer;
  * @since 0.0.1
  */
 public class RegisteredClient implements Serializable {
-	private static final long serialVersionUID = Version.SERIAL_VERSION_UID;
-	private String id;
+	private static final long serialVersionUID = Version.SERIAL_VERSION_UID; // 好设计！
+	private String id; // 多余配置
 	private String clientId;
 	private String clientSecret;
 	private Set<ClientAuthenticationMethod> clientAuthenticationMethods;
 	private Set<AuthorizationGrantType> authorizationGrantTypes;
-	private Set<String> redirectUris;
+	private Set<String> redirectUris; // 多个 callback 地址？ 曾倩
 	private Set<String> scopes;
 	private ClientSettings clientSettings;
 	private TokenSettings tokenSettings;
