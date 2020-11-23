@@ -55,7 +55,7 @@ public final class DelegatingAuthorizationGrantAuthenticationConverter implement
 		Assert.notNull(request, "request cannot be null");
 
 		String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-		if (StringUtils.isEmpty(grantType)) {
+		if (!StringUtils.hasText(grantType)) {
 			return null;
 		}
 

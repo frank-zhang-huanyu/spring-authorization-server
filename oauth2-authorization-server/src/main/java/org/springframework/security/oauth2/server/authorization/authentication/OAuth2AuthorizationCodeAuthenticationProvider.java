@@ -83,10 +83,14 @@ public class OAuth2AuthorizationCodeAuthenticationProvider implements Authentica
 		OAuth2AuthorizationCodeAuthenticationToken authorizationCodeAuthentication =
 				(OAuth2AuthorizationCodeAuthenticationToken) authentication;
 
+		// 用于 /oauth2/token ，所以 client 验证是必须的
 		OAuth2ClientAuthenticationToken clientPrincipal =
 				getAuthenticatedClientElseThrowInvalidClient(authorizationCodeAuthentication);
 		RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
 
+		/**
+		 * 使用 code 获取 token， 首先需要验证 code
+		 */
 		OAuth2Authorization authorization = this.authorizationService.findByToken(
 				authorizationCodeAuthentication.getCode(), TokenType.AUTHORIZATION_CODE);
 		if (authorization == null) {
@@ -98,8 +102,9 @@ public class OAuth2AuthorizationCodeAuthenticationProvider implements Authentica
 		OAuth2AuthorizationRequest authorizationRequest = authorization.getAttribute(
 				OAuth2AuthorizationAttributeNames.AUTHORIZATION_REQUEST);
 
+		// 判断  clientId 是否同源
 		if (!registeredClient.getClientId().equals(authorizationRequest.getClientId())) {
-			if (!authorizationCodeMetadata.isInvalidated()) {
+			if (!authorizationCodeMetadata.isInvalidated()) { // 未被失效, 则将之设置为失效，因为可能遭遇数据泄露
 				// Invalidate the authorization code given that a different client is attempting to use it
 				authorization = OAuth2AuthenticationProviderUtils.invalidate(authorization, authorizationCode);
 				this.authorizationService.save(authorization);
@@ -107,6 +112,7 @@ public class OAuth2AuthorizationCodeAuthenticationProvider implements Authentica
 			throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT));
 		}
 
+		// 判断跳转 url
 		if (StringUtils.hasText(authorizationRequest.getRedirectUri()) &&
 				!authorizationRequest.getRedirectUri().equals(authorizationCodeAuthentication.getRedirectUri())) {
 			throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT));
@@ -116,6 +122,7 @@ public class OAuth2AuthorizationCodeAuthenticationProvider implements Authentica
 			throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_GRANT));
 		}
 
+		// build token
 		Set<String> authorizedScopes = authorization.getAttribute(OAuth2AuthorizationAttributeNames.AUTHORIZED_SCOPES);
 		Jwt jwt = OAuth2TokenIssuerUtil
 			.issueJwtAccessToken(this.jwtEncoder, authorization.getPrincipalName(), registeredClient.getClientId(), authorizedScopes);

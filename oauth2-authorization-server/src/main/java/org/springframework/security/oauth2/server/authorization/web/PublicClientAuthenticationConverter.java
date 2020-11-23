@@ -33,6 +33,8 @@ import java.util.HashMap;
  * Attempts to extract the parameters from {@link HttpServletRequest}
  * used for authenticating public clients using Proof Key for Code Exchange (PKCE).
  *
+ * Get method
+ *
  * @author Joe Grandja
  * @since 0.0.2
  * @see AuthenticationConverter

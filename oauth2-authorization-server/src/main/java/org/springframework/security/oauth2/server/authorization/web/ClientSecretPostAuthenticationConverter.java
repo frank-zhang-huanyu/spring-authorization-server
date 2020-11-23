@@ -35,6 +35,8 @@ import java.util.Map;
  * Attempts to extract client credentials from POST parameters of {@link HttpServletRequest}
  * and then converts to an {@link OAuth2ClientAuthenticationToken} used for authenticating the client.
  *
+ * client post: client_id=xxx&client_secret=xxx
+ *
  * @author Anoop Garlapati
  * @since 0.1.0
  * @see OAuth2ClientAuthenticationToken

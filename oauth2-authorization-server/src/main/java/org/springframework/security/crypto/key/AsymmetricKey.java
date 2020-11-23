@@ -26,16 +26,26 @@ import java.util.UUID;
 /**
  * A {@link CryptoKey} that holds a {@code java.security.PrivateKey}
  * and {@code java.security.PublicKey} used for asymmetric algorithm's.
+ * <p>
+ * 非对称加密类
  *
  * @author Joe Grandja
- * @since 0.1.0
  * @see CryptoKey
  * @see PrivateKey
  * @see PublicKey
+ * @since 0.1.0
  */
 public final class AsymmetricKey extends CryptoKey<PrivateKey> {
 	private final PublicKey publicKey;
 
+	/**
+	 * 私有构造器
+	 *
+	 * @param privateKey 私钥
+	 * @param publicKey  公钥
+	 * @param id         id，没有会在build时自动生成
+	 * @param metadata   描述密钥对的元信息
+	 */
 	private AsymmetricKey(PrivateKey privateKey, PublicKey publicKey, String id, Map<String, Object> metadata) {
 		super(privateKey, id, metadata);
 		this.publicKey = publicKey;
@@ -52,6 +62,7 @@ public final class AsymmetricKey extends CryptoKey<PrivateKey> {
 
 	/**
 	 * A builder for {@link AsymmetricKey}.
+	 * 继承父类builer，拓展添加 公钥保存
 	 */
 	public static class Builder extends AbstractBuilder<AsymmetricKey, Builder> {
 		private PublicKey publicKey;

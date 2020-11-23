@@ -37,6 +37,8 @@ import java.util.Map;
  * Attempts to extract HTTP Basic credentials from {@link HttpServletRequest}
  * and then converts to an {@link OAuth2ClientAuthenticationToken} used for authenticating the client.
  *
+ * client  basic login Basic: base64(id:secret)
+ *
  * @author Patryk Kostrzewa
  * @author Joe Grandja
  * @since 0.0.1

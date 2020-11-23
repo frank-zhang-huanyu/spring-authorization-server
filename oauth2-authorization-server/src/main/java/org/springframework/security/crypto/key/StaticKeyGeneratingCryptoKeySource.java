@@ -32,6 +32,7 @@ import static org.springframework.security.crypto.key.KeyGeneratorUtils.generate
  *
  * <p>
  * <b>NOTE:</b> This implementation should ONLY be used during development/testing.
+ * 静态密钥生成加密密钥源, 用于开发与测试
  *
  * @author Joe Grandja
  * @since 0.1.0

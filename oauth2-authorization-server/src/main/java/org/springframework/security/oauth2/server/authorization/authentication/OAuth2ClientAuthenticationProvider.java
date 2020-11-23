@@ -82,6 +82,9 @@ public class OAuth2ClientAuthenticationProvider implements AuthenticationProvide
 			throwInvalidClient();
 		}
 
+		/**
+		 * 校验传输验证信息方法
+		 */
 		if (!registeredClient.getClientAuthenticationMethods().contains(
 				clientAuthentication.getClientAuthenticationMethod())) {
 			throwInvalidClient();

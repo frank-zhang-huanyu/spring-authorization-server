@@ -24,6 +24,7 @@ import java.util.UUID;
 /**
  * A {@link CryptoKey} that holds a {@code javax.crypto.SecretKey}
  * used for symmetric algorithm's.
+ * 对称加密
  *
  * @author Joe Grandja
  * @since 0.1.0

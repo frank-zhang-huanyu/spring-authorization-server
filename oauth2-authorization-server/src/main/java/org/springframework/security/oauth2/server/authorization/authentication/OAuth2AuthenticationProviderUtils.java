@@ -38,6 +38,12 @@ final class OAuth2AuthenticationProviderUtils {
 	private OAuth2AuthenticationProviderUtils() {
 	}
 
+	/**
+	 * 从 authentication 中获取 OAuth2ClientAuthenticationToken
+	 *
+	 * @param authentication
+	 * @return
+	 */
 	static OAuth2ClientAuthenticationToken getAuthenticatedClientElseThrowInvalidClient(Authentication authentication) {
 		OAuth2ClientAuthenticationToken clientPrincipal = null;
 		if (OAuth2ClientAuthenticationToken.class.isAssignableFrom(authentication.getPrincipal().getClass())) {
@@ -49,11 +55,19 @@ final class OAuth2AuthenticationProviderUtils {
 		throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.INVALID_CLIENT));
 	}
 
+	/**
+	 * 让 token 失效
+	 *
+	 * @param authorization
+	 * @param token
+	 * @param <T>
+	 * @return
+	 */
 	static <T extends AbstractOAuth2Token> OAuth2Authorization invalidate(
 			OAuth2Authorization authorization, T token) {
 
 		OAuth2Tokens.Builder builder = OAuth2Tokens.from(authorization.getTokens())
-				.token(token, OAuth2TokenMetadata.builder().invalidated().build());
+				.token(token, OAuth2TokenMetadata.builder().invalidated().build()); // build 出一个 失效的 OAuth2Tokens 对象
 
 		if (OAuth2RefreshToken.class.isAssignableFrom(token.getClass())) {
 			builder.token(

@@ -30,6 +30,8 @@ import java.util.Collections;
  * An {@link Authentication} implementation used when issuing an
  * OAuth 2.0 Access Token and (optional) Refresh Token.
  *
+ * Spring security 认证授权信息 access_token and refresh_torken(可选)
+ *
  * @author Joe Grandja
  * @author Madhu Bhat
  * @since 0.0.1

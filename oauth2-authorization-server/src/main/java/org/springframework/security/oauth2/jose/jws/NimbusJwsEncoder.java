@@ -118,7 +118,9 @@ public final class NimbusJwsEncoder implements JwtEncoder {
 		}
 
 		JWSSigner jwsSigner;
+		// 判断密钥类型属于 对称加密 或 非对称加密 生成适配的 jws签名类
 		if (AsymmetricKey.class.isAssignableFrom(cryptoKey.getClass())) {
+			// 仅支持 RSA
 			if (!cryptoKey.getAlgorithm().equals(RSA_KEY_TYPE)) {
 				throw new JwtEncodingException(String.format(
 						ENCODING_ERROR_MESSAGE_TEMPLATE,
@@ -136,6 +138,8 @@ public final class NimbusJwsEncoder implements JwtEncoder {
 			}
 		}
 
+		// 对原有header进行属性升级/添加
+		// PS: JoseHeader 是 final 类
 		headers = JoseHeader.from(headers)
 				.type(JOSEObjectType.JWT.getType())
 				.keyId(cryptoKey.getId())
@@ -147,6 +151,7 @@ public final class NimbusJwsEncoder implements JwtEncoder {
 				.build();
 		JWTClaimsSet jwtClaimsSet = jwtClaimsSetConverter.convert(claims);
 
+		// jwsHeader 描述签名算法 jwtClaimsSet 属于 payload.  JWT: jwsHeader.payload.signature
 		SignedJWT signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
 		try {
 			signedJWT.sign(jwsSigner);
@@ -160,6 +165,11 @@ public final class NimbusJwsEncoder implements JwtEncoder {
 				headers.getHeaders(), claims.getClaims());
 	}
 
+	/**
+	 * 从 jwt 头中获取加密密钥
+	 * @param headers
+	 * @return
+	 */
 	private CryptoKey<?> selectKey(JoseHeader headers) {
 		JwsAlgorithm jwsAlgorithm = headers.getJwsAlgorithm();
 		String keyAlgorithm = jcaKeyAlgorithmMappings.get(jwsAlgorithm);
@@ -167,6 +177,7 @@ public final class NimbusJwsEncoder implements JwtEncoder {
 			return null;
 		}
 
+		// 拿出 keySource 第一个符合 jws 描述算法的 密钥 Key
 		return this.keySource.getKeys().stream()
 				.filter(key -> key.getAlgorithm().equals(keyAlgorithm))
 				.findFirst()

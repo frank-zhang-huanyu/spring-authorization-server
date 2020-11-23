@@ -160,6 +160,7 @@ public class CryptoKey<K extends Key> implements Serializable {
 
 	/**
 	 * Base builder for {@link CryptoKey}.
+	 * 可拓展的建造者模式
 	 *
 	 * @param <T> the type of {@link CryptoKey}
 	 * @param <B> the type of {@link AbstractBuilder}

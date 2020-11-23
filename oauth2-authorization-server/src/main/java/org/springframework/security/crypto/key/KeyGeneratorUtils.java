@@ -26,10 +26,16 @@ import java.security.spec.ECPoint;
 import java.security.spec.EllipticCurve;
 
 /**
+ * 密钥生成工具类
+ * @support HMAC SHA-256
+ * @support RSA-2048
+ * @support ECC-256
+ *
  * @author Joe Grandja
  * @since 0.0.1
  */
 final class KeyGeneratorUtils {
+
 
 	static SecretKey generateSecretKey() {
 		SecretKey hmacKey;
